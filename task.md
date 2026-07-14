@@ -1,0 +1,3 @@
+- `[x]` YES24 데이터 요약 통계량 분석
+- `[x]` 데이터 시각화 스크립트 작성 및 이미지 5종 생성 ([eda.py](file:///Users/utaekim/aiProject/GeminiCLIPorject/yes24/src/eda.py))
+- `[x]` EDA 최종 마크다운 보고서 작성 ([eda_report.md](file:///Users/utaekim/aiProject/GeminiCLIPorject/yes24/docs/eda_report.md))
