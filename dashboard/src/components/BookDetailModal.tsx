@@ -18,10 +18,15 @@ interface Book {
   rating: number;
 }
 
+interface MatchedBookInfo {
+  store: 'YES24' | '교보문고' | '알라딘';
+  book: Book;
+}
+
 interface BookDetailModalProps {
   book: Book;
-  store: 'YES24' | '교보문고';
-  matchedBook: Book | null;
+  store: 'YES24' | '교보문고' | '알라딘';
+  matchedBook: MatchedBookInfo[];
   onClose: () => void;
   theme: string;
 }
@@ -58,7 +63,7 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
         return 'bg-indigo-100 text-indigo-700';
       default:
         return 'bg-slate-700 text-slate-300';
-    }
+      }
   };
 
   return (
@@ -83,14 +88,14 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getBadgeClass()}`}>
                 {store} 베스트 {book.rank}위
               </span>
-              {matchedBook && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 border border-emerald-500 text-emerald-400">
-                  양대 서점 교차 매칭 도서
+              {matchedBook.length > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 border border-emerald-500 text-emerald-400 animate-pulse">
+                  3대 서점 교차 매칭 완료 ({matchedBook.length + 1}개 서점)
                 </span>
               )}
             </div>
-            <h2 className="text-2xl font-bold font-heading mb-1 leading-snug">{book.title}</h2>
-            {book.subtitle && <p className={`text-sm italic ${getSubtextClass()}`}>{book.subtitle}</p>}
+            <h2 className="text-xl md:text-2xl font-bold font-heading mb-1 leading-snug">{book.title}</h2>
+            {book.subtitle && <p className={`text-xs italic ${getSubtextClass()}`}>{book.subtitle}</p>}
           </div>
         </div>
 
@@ -99,134 +104,121 @@ export const BookDetailModal: React.FC<BookDetailModalProps> = ({
           
           {/* 도서 메타데이터 카드 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold font-heading border-b pb-2">기본 정보</h3>
+            <h3 className="text-base font-bold font-heading border-b border-[var(--border-color)] pb-2 flex items-center gap-1">
+              <span>📖</span> 도서 상세 정보
+            </h3>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 text-xs md:text-sm">
               <div>
-                <p className="text-xs opacity-75">저자</p>
-                <p className="font-semibold">{book.author}</p>
+                <p className="text-[10px] opacity-75">저자</p>
+                <p className="font-semibold text-[var(--text-title)]">{book.author}</p>
               </div>
               <div>
-                <p className="text-xs opacity-75">출판사</p>
-                <p className="font-semibold">{book.publisher}</p>
+                <p className="text-[10px] opacity-75">출판사</p>
+                <p className="font-semibold text-[var(--text-title)]">{book.publisher}</p>
               </div>
               <div>
-                <p className="text-xs opacity-75">출판일</p>
-                <p className="font-semibold">{book.publish_date}</p>
+                <p className="text-[10px] opacity-75">출판일</p>
+                <p className="font-semibold text-[var(--text-title)]">{book.publish_date}</p>
               </div>
               <div>
-                <p className="text-xs opacity-75">상품 번호</p>
-                <p className="font-semibold">{book.goods_no}</p>
+                <p className="text-[10px] opacity-75">상품 번호</p>
+                <p className="font-semibold text-[var(--text-title)]">{book.goods_no}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mt-4">
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10 flex flex-col items-center">
-                <Coins className="w-5 h-5 mb-1 opacity-70" />
-                <p className="text-[11px] opacity-75">실판매가</p>
-                <p className="font-bold text-sm">{book.sale_price.toLocaleString()}원</p>
-                <p className="text-[10px] opacity-60">({book.discount_rate} 할인)</p>
+              <div className="p-3 bg-black/25 rounded-xl border border-white/5 flex flex-col items-center">
+                <Coins className="w-4 h-4 mb-1 opacity-70" />
+                <p className="text-[10px] opacity-75">실판매가</p>
+                <p className="font-bold text-xs text-[var(--color-accent)]">{book.sale_price.toLocaleString()}원</p>
+                <p className="text-[9px] opacity-60">({book.discount_rate} 할인)</p>
               </div>
               
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10 flex flex-col items-center">
-                <Star className="w-5 h-5 mb-1 text-yellow-400 opacity-90" />
-                <p className="text-[11px] opacity-75">독자 평점</p>
-                <p className="font-bold text-sm">{book.rating > 0 ? `${book.rating} / 10.0` : '평가 없음'}</p>
+              <div className="p-3 bg-black/25 rounded-xl border border-white/5 flex flex-col items-center">
+                <Star className="w-4 h-4 mb-1 text-yellow-400 opacity-90" />
+                <p className="text-[10px] opacity-75">독자 평점</p>
+                <p className="font-bold text-xs text-yellow-400">{book.rating > 0 ? `${book.rating}점` : '평가 없음'}</p>
               </div>
 
-              <div className="p-3 bg-white/5 rounded-xl border border-white/10 flex flex-col items-center">
-                <MessageSquare className="w-5 h-5 mb-1 opacity-70" />
-                <p className="text-[11px] opacity-75">리뷰 수</p>
-                <p className="font-bold text-sm">{book.review_count}개</p>
+              <div className="p-3 bg-black/25 rounded-xl border border-white/5 flex flex-col items-center">
+                <MessageSquare className="w-4 h-4 mb-1 opacity-70" />
+                <p className="text-[10px] opacity-75">리뷰 수</p>
+                <p className="font-bold text-xs text-[var(--text-title)]">{book.review_count}개</p>
               </div>
             </div>
           </div>
 
           {/* 1:1 서점 비교 뷰 */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold font-heading border-b pb-2">양대 서점 비교 통계</h3>
+            <h3 className="text-base font-bold font-heading border-b border-[var(--border-color)] pb-2 flex items-center gap-1">
+              <span>🔍</span> 3대 온라인 서점 비교 통계
+            </h3>
             
-            {matchedBook ? (
-              <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-4">
-                
-                {/* 1. 순위 비교 */}
-                <div>
-                  <p className="text-xs opacity-70 mb-1">베스트셀러 순위 비교</p>
-                  <div className="flex justify-between items-center bg-black/20 p-2.5 rounded-lg text-sm">
-                    <div>
-                      <span className="font-semibold text-slate-300">YES24:</span>{' '}
-                      <span className="font-bold text-indigo-400">
-                        {store === 'YES24' ? book.rank : matchedBook.rank}위
-                      </span>
+            {matchedBook.length > 0 ? (
+              <div className="space-y-4">
+                {/* 3사 가격/순위 동시비교 테이블 */}
+                <div className="p-4 bg-black/25 rounded-xl border border-white/5 space-y-3 overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 opacity-75">
+                        <th className="pb-1.5 font-semibold">서점 채널</th>
+                        <th className="pb-1.5 font-semibold text-center">순위</th>
+                        <th className="pb-1.5 font-semibold text-right">실구매가</th>
+                        <th className="pb-1.5 font-semibold text-center">평점</th>
+                        <th className="pb-1.5 font-semibold text-center">리뷰</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* 1. 현재 서점 정보 */}
+                      <tr className="border-b border-white/5 font-bold text-[var(--color-accent)]">
+                        <td className="py-2">{store} (기준)</td>
+                        <td className="py-2 text-center">{book.rank}위</td>
+                        <td className="py-2 text-right">{book.sale_price.toLocaleString()}원</td>
+                        <td className="py-2 text-center text-yellow-400">{book.rating > 0 ? book.rating.toFixed(1) : '-'}</td>
+                        <td className="py-2 text-center opacity-75">{book.review_count}</td>
+                      </tr>
+                      {/* 2. 매칭된 타 서점 정보들 */}
+                      {matchedBook.map((item, idx) => (
+                        <tr key={idx} className="border-b border-white/5 opacity-90 text-[var(--text-title)]">
+                          <td className="py-2">{item.store}</td>
+                          <td className="py-2 text-center">{item.book.rank}위</td>
+                          <td className="py-2 text-right">{item.book.sale_price.toLocaleString()}원</td>
+                          <td className="py-2 text-center text-yellow-400">{item.book.rating > 0 ? item.book.rating.toFixed(1) : '-'}</td>
+                          <td className="py-2 text-center opacity-75">{item.book.review_count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {/* 알뜰 구매 팁 제공 */}
+                  {matchedBook.length > 0 && (
+                    <div className="bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20 text-[10px] text-emerald-400">
+                      💡 <strong>최저가 비교 분석:</strong>{' '}
+                      {(() => {
+                        const allPrices = [
+                          { store, price: book.sale_price },
+                          ...matchedBook.map(m => ({ store: m.store, price: m.book.sale_price }))
+                        ];
+                        const sorted = allPrices.sort((a, b) => a.price - b.price);
+                        const isSame = sorted[0].price === sorted[sorted.length - 1].price;
+                        if (isSame) {
+                          return '3개 서점의 판매 가격이 동일합니다.';
+                        } else {
+                          return `현재 "${sorted[0].store}"에서 가장 저렴하게 (${sorted[0].price.toLocaleString()}원) 판매하고 있습니다.`;
+                        }
+                      })()}
                     </div>
-                    <div className="w-px h-4 bg-white/15"></div>
-                    <div>
-                      <span className="font-semibold text-slate-300">교보문고:</span>{' '}
-                      <span className="font-bold text-pink-400">
-                        {store === '교보문고' ? book.rank : matchedBook.rank}위
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-xs mt-1 text-right italic opacity-75">
-                    순위 편차:{' '}
-                    <span className="font-bold">
-                      {Math.abs(book.rank - matchedBook.rank)}위
-                    </span>{' '}
-                    ({book.rank < matchedBook.rank ? store : (store === 'YES24' ? '교보문고' : 'YES24')} 우위)
-                  </p>
-                </div>
-
-                {/* 2. 가격 차이 비교 */}
-                <div>
-                  <p className="text-xs opacity-70 mb-1">실구매가격 비교</p>
-                  <div className="flex justify-between items-center bg-black/20 p-2.5 rounded-lg text-sm">
-                    <div>
-                      <span className="font-semibold text-slate-300">YES24:</span>{' '}
-                      <span className="font-bold">
-                        {(store === 'YES24' ? book.sale_price : matchedBook.sale_price).toLocaleString()}원
-                      </span>
-                    </div>
-                    <div className="w-px h-4 bg-white/15"></div>
-                    <div>
-                      <span className="font-semibold text-slate-300">교보문고:</span>{' '}
-                      <span className="font-bold">
-                        {(store === '교보문고' ? book.sale_price : matchedBook.sale_price).toLocaleString()}원
-                      </span>
-                    </div>
-                  </div>
-                  {book.sale_price !== matchedBook.sale_price ? (
-                    <p className="text-xs mt-1 text-right text-emerald-400 font-semibold">
-                      차액: {Math.abs(book.sale_price - matchedBook.sale_price).toLocaleString()}원 더 저렴함 (
-                      {book.sale_price < matchedBook.sale_price ? store : (store === 'YES24' ? '교보문고' : 'YES24')} 기준)
-                    </p>
-                  ) : (
-                    <p className="text-xs mt-1 text-right opacity-60">두 서점의 유통 판매가가 일치합니다.</p>
                   )}
                 </div>
-
-                {/* 3. 독자 평가 비교 */}
-                <div>
-                  <p className="text-xs opacity-70 mb-1">평점 및 독자 서평 수 비교</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-black/20 p-2 rounded">
-                      <p className="opacity-70 font-semibold mb-1">YES24 만족도</p>
-                      <p>평점: <span className="font-bold text-yellow-400">{(store === 'YES24' ? book.rating : matchedBook.rating)}점</span></p>
-                      <p>서평: <span className="font-bold">{(store === 'YES24' ? book.review_count : matchedBook.review_count)}개</span></p>
-                    </div>
-                    <div className="bg-black/20 p-2 rounded">
-                      <p className="opacity-70 font-semibold mb-1">교보문고 만족도</p>
-                      <p>평점: <span className="font-bold text-yellow-400">{(store === '교보문고' ? book.rating : matchedBook.rating)}점</span></p>
-                      <p>서평: <span className="font-bold">{(store === '교보문고' ? book.review_count : matchedBook.review_count)}개</span></p>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             ) : (
-              <div className="h-full flex flex-col justify-center items-center p-8 bg-white/5 rounded-xl border border-white/10 border-dashed text-center">
-                <Award className="w-12 h-12 mb-2 opacity-50" />
-                <p className="text-sm font-semibold opacity-85">독립 순위 도서</p>
-                <p className="text-xs opacity-70 mt-1">본 도서는 해당 서점의 순위권(YES24 1,000위 / 교보문고 100위)에만 단독 랭크되어 매칭되지 않았습니다.</p>
+              <div className="h-full flex flex-col justify-center items-center p-8 bg-black/25 rounded-xl border border-white/5 border-dashed text-center">
+                <Award className="w-12 h-12 mb-2 opacity-50 text-[var(--color-accent)]" />
+                <p className="text-sm font-semibold opacity-85 text-[var(--text-title)]">독립 순위 도서</p>
+                <p className="text-xs opacity-70 mt-1 max-w-[280px] leading-relaxed">
+                  본 도서는 {store}의 베스트셀러 순위권에만 단독 랭크되어 다른 온라인 서점에 매칭되지 않은 독립 상품입니다.
+                </p>
               </div>
             )}
             

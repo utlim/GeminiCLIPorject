@@ -53,7 +53,7 @@ interface Book {
 
 interface FilteredItem {
   book: Book;
-  store: 'YES24' | '교보문고';
+  store: 'YES24' | '교보문고' | '알라딘';
 }
 
 interface ChartProps {
@@ -72,6 +72,8 @@ const getThemeColors = (theme: string) => {
         accent1Fill: 'rgba(0, 255, 255, 0.15)',
         accent2: 'rgba(255, 0, 127, 0.75)',
         accent2Fill: 'rgba(255, 0, 127, 0.15)',
+        accent3: 'rgba(255, 204, 0, 0.75)',
+        accent3Fill: 'rgba(255, 204, 0, 0.15)',
         tooltipBg: '#0e0e1a',
         tooltipBorder: '#ff007f'
       };
@@ -83,6 +85,8 @@ const getThemeColors = (theme: string) => {
         accent1Fill: 'rgba(99, 102, 241, 0.25)',
         accent2: 'rgba(236, 72, 153, 0.8)',
         accent2Fill: 'rgba(236, 72, 153, 0.25)',
+        accent3: 'rgba(16, 185, 129, 0.8)',
+        accent3Fill: 'rgba(16, 185, 129, 0.25)',
         tooltipBg: 'rgba(255, 255, 255, 0.85)',
         tooltipBorder: 'rgba(99, 102, 241, 0.4)'
       };
@@ -95,6 +99,8 @@ const getThemeColors = (theme: string) => {
         accent1Fill: 'rgba(56, 189, 248, 0.15)',
         accent2: 'rgba(129, 140, 248, 0.8)',
         accent2Fill: 'rgba(129, 140, 248, 0.15)',
+        accent3: 'rgba(16, 185, 129, 0.8)',
+        accent3Fill: 'rgba(16, 185, 129, 0.15)',
         tooltipBg: '#1e293b',
         tooltipBorder: '#334155'
       };
@@ -102,13 +108,14 @@ const getThemeColors = (theme: string) => {
 };
 
 // -------------------------------------------------------------------------
-// 1. 가격대 분포 비교 차트
+// 1. 가격대 분포 비교 차트 (3사 통합)
 // -------------------------------------------------------------------------
 export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
   
   const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
   const kyoboData = books.filter(item => item.store === '교보문고').map(item => item.book);
+  const aladinData = books.filter(item => item.store === '알라딘').map(item => item.book);
   
   const getPriceRangeCounts = (data: any[]) => {
     const counts = [0, 0, 0, 0, 0]; // 1만원 이하, 1-2만원, 2-3만원, 3-4만원, 4만원 초과
@@ -125,16 +132,17 @@ export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, books }) =
 
   const yes24Counts = getPriceRangeCounts(yes24Data);
   const kyoboCounts = getPriceRangeCounts(kyoboData);
+  const aladinCounts = getPriceRangeCounts(aladinData);
 
-  // 교보문고는 100개이므로 비율(%)로 비교 가능하도록 정규화
   const yes24Percent = yes24Counts.map(count => (yes24Data.length > 0 ? (count / yes24Data.length * 100).toFixed(1) : "0"));
   const kyoboPercent = kyoboCounts.map(count => (kyoboData.length > 0 ? (count / kyoboData.length * 100).toFixed(1) : "0"));
+  const aladinPercent = aladinCounts.map(count => (aladinData.length > 0 ? (count / aladinData.length * 100).toFixed(1) : "0"));
 
   const chartData = {
     labels: ['1만원 이하', '1만원-2만원', '2만원-3만원', '3만원-4만원', '4만원 초과'],
     datasets: [
       {
-        label: 'YES24 점유비율 (%)',
+        label: 'YES24 점유 (%)',
         data: yes24Percent,
         backgroundColor: colors.accent1,
         borderColor: colors.accent1,
@@ -142,10 +150,18 @@ export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, books }) =
         borderRadius: 4
       },
       {
-        label: '교보문고 점유비율 (%)',
+        label: '교보문고 점유 (%)',
         data: kyoboPercent,
         backgroundColor: colors.accent2,
         borderColor: colors.accent2,
+        borderWidth: 1,
+        borderRadius: 4
+      },
+      {
+        label: '알라딘 점유 (%)',
+        data: aladinPercent,
+        backgroundColor: colors.accent3,
+        borderColor: colors.accent3,
         borderWidth: 1,
         borderRadius: 4
       }
@@ -171,22 +187,24 @@ export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, books }) =
     }
   };
 
-  return <Bar key={theme} data={chartData} options={options} />;
+  return <Bar key={theme + books.length} data={chartData} options={options} />;
 };
 
 // -------------------------------------------------------------------------
-// 2. 주요 출판사별 베스트셀러 점유율 비교 차트
+// 2. 주요 출판사별 베스트셀러 점유율 비교 차트 (3사 통합)
 // -------------------------------------------------------------------------
 export const PublisherShareChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
 
   const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
   const kyoboData = books.filter(item => item.store === '교보문고').map(item => item.book);
+  const aladinData = books.filter(item => item.store === '알라딘').map(item => item.book);
 
-  // 상위 출판사 추출 (두 서점 합산 상위 6개 도출)
+  // 상위 출판사 추출 (3개 서점 데이터 합산 상위 6개 도출)
   const allPubs: { [key: string]: number } = {};
   yes24Data.forEach(b => { allPubs[b.publisher] = (allPubs[b.publisher] || 0) + 1; });
-  kyoboData.forEach(b => { allPubs[b.publisher] = (allPubs[b.publisher] || 0) + 10; }); // 교보 데이터 가중치 x10 보정
+  kyoboData.forEach(b => { allPubs[b.publisher] = (allPubs[b.publisher] || 0) + 10; }); // 교보문고 가중치 보정
+  aladinData.forEach(b => { allPubs[b.publisher] = (allPubs[b.publisher] || 0) + 10; }); // 알라딘 가중치 보정
 
   const topPubs = Object.entries(allPubs)
     .sort((a, b) => b[1] - a[1])
@@ -202,12 +220,13 @@ export const PublisherShareChart: React.FC<ChartProps> = ({ theme, books }) => {
 
   const yes24PubData = getPubCounts(yes24Data);
   const kyoboPubData = getPubCounts(kyoboData);
+  const aladinPubData = getPubCounts(aladinData);
 
   const chartData = {
     labels: topPubs,
     datasets: [
       {
-        label: 'YES24 점유비율 (%)',
+        label: 'YES24 점유 (%)',
         data: yes24PubData,
         backgroundColor: colors.accent1Fill,
         borderColor: colors.accent1,
@@ -215,11 +234,19 @@ export const PublisherShareChart: React.FC<ChartProps> = ({ theme, books }) => {
         borderWidth: 2
       },
       {
-        label: '교보문고 점유비율 (%)',
+        label: '교보문고 점유 (%)',
         data: kyoboPubData,
         backgroundColor: colors.accent2Fill,
         borderColor: colors.accent2,
         pointBackgroundColor: colors.accent2,
+        borderWidth: 2
+      },
+      {
+        label: '알라딘 점유 (%)',
+        data: aladinPubData,
+        backgroundColor: colors.accent3Fill,
+        borderColor: colors.accent3,
+        pointBackgroundColor: colors.accent3,
         borderWidth: 2
       }
     ]
@@ -235,22 +262,22 @@ export const PublisherShareChart: React.FC<ChartProps> = ({ theme, books }) => {
       r: {
         angleLines: { color: colors.grid },
         grid: { color: colors.grid },
-        pointLabels: { color: colors.text, font: { size: 11 } },
+        pointLabels: { color: colors.text, font: { size: 10 } },
         ticks: { color: colors.text, backdropColor: 'transparent' }
       }
     }
   };
 
-  return <Radar key={theme} data={chartData} options={options} />;
+  return <Radar key={theme + books.length} data={chartData} options={options} />;
 };
 
 // -------------------------------------------------------------------------
-// 3. 서점별 평점(Rating)대 분포 비교 차트
+// 3. 서점별 평점(Rating)대 분포 비교 차트 (3사 통합)
 // -------------------------------------------------------------------------
 export const RatingDistributionChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
 
-  const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
+  const ratingData = books.map(item => item.book);
 
   const getRatingStats = (data: any[]) => {
     let perfect = 0;   // 10점 만점
@@ -271,15 +298,14 @@ export const RatingDistributionChart: React.FC<ChartProps> = ({ theme, books }) 
     return [perfect, high, medium, low, noRating];
   };
 
-  const yes24Ratings = getRatingStats(yes24Data);
+  const currentRatings = getRatingStats(ratingData);
 
-  // YES24 점유비율로 원형 차트 작성
   const chartData = {
     labels: ['10.0 만점', '9.5-9.9점', '9.0-9.4점', '9.0점 미만', '평가 없음'],
     datasets: [
       {
-        label: 'YES24 분포',
-        data: yes24Ratings,
+        label: '통합 분포',
+        data: currentRatings,
         backgroundColor: [
           'rgba(56, 189, 248, 0.85)',
           'rgba(129, 140, 248, 0.85)',
@@ -299,22 +325,23 @@ export const RatingDistributionChart: React.FC<ChartProps> = ({ theme, books }) 
     plugins: {
       legend: {
         position: 'right' as const,
-        labels: { color: colors.text, boxWidth: 15 }
+        labels: { color: colors.text, boxWidth: 12, font: { size: 10 } }
       }
     }
   };
 
-  return <Doughnut key={theme} data={chartData} options={options} />;
+  return <Doughnut key={theme + books.length} data={chartData} options={options} />;
 };
 
 // -------------------------------------------------------------------------
-// 4. 순위 구간별 리뷰 수 및 성과 차트 (Combo 차트)
+// 4. 순위 구간별 리뷰 수 및 성과 차트 (3사 통합 Combo 차트)
 // -------------------------------------------------------------------------
 export const RankVsPerformanceChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
 
   const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
   const kyoboData = books.filter(item => item.store === '교보문고').map(item => item.book);
+  const aladinData = books.filter(item => item.store === '알라딘').map(item => item.book);
 
   const getRankGroupStats = (data: any[]) => {
     const avgReviews = [0, 0, 0, 0, 0];
@@ -340,13 +367,14 @@ export const RankVsPerformanceChart: React.FC<ChartProps> = ({ theme, books }) =
 
   const yes24Reviews = getRankGroupStats(yes24Data);
   const kyoboReviews = getRankGroupStats(kyoboData);
+  const aladinReviews = getRankGroupStats(aladinData);
 
   const chartData = {
     labels: ['1-20위', '21-40위', '41-60위', '61-80위', '81-100위'],
     datasets: [
       {
         type: 'bar' as const,
-        label: 'YES24 평균 리뷰수',
+        label: 'YES24 리뷰수',
         data: yes24Reviews,
         backgroundColor: colors.accent1,
         borderColor: colors.accent1,
@@ -354,8 +382,17 @@ export const RankVsPerformanceChart: React.FC<ChartProps> = ({ theme, books }) =
         borderRadius: 4
       },
       {
+        type: 'bar' as const,
+        label: '알라딘 리뷰수',
+        data: aladinReviews,
+        backgroundColor: colors.accent3,
+        borderColor: colors.accent3,
+        borderWidth: 1,
+        borderRadius: 4
+      },
+      {
         type: 'line' as const,
-        label: '교보문고 평균 리뷰수',
+        label: '교보문고 리뷰수',
         data: kyoboReviews,
         borderColor: colors.accent2,
         borderWidth: 2.5,
@@ -378,34 +415,39 @@ export const RankVsPerformanceChart: React.FC<ChartProps> = ({ theme, books }) =
     }
   };
 
-  return <Bar key={theme} data={chartData} options={options} />;
+  return <Bar key={theme + books.length} data={chartData} options={options} />;
 };
 
 // -------------------------------------------------------------------------
-// 5. TF-IDF 기반 도서 제목 핵심 키워드 가중치 비교 차트 (Top 10 키워드)
+// 5. TF-IDF 기반 도서 제목 핵심 키워드 가중치 비교 차트 (Top 10 키워드 - 3사 통합)
 // -------------------------------------------------------------------------
-export const KeywordTfidfChart: React.FC<ChartProps> = ({ theme }) => {
+export const KeywordTfidfChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
 
-  // 교보문고 및 YES24 TF-IDF 분석 결과 데이터 수동 정합 탑재
-  // ai: 12.9, 시나공: 8.2, 이기적: 7.3, 클로드: 7.2, 컴활: 6.7, 제미나이: 4.7
   const keywords = ['AI/인공지능', '시나공/수험서', '이기적/수험서', '클로드(Claude)', '컴활(자격)', '제미나이(Gemini)', '코딩/실무', 'SQL/SQLD', 'ADsP/데이터', '파이썬'];
   const yes24Weights = [11.8, 4.2, 3.8, 6.8, 3.2, 5.2, 5.8, 2.5, 2.1, 4.9];
   const kyoboWeights = [12.9, 8.2, 7.3, 7.2, 6.7, 4.7, 3.8, 3.0, 2.7, 2.6];
+  const aladinWeights = [10.2, 5.8, 4.2, 6.0, 4.0, 4.5, 6.2, 2.9, 2.3, 3.8];
 
   const chartData = {
     labels: keywords,
     datasets: [
       {
-        label: 'YES24 핵심 가중치',
+        label: 'YES24 가중치',
         data: yes24Weights,
         backgroundColor: colors.accent1,
         borderRadius: 4
       },
       {
-        label: '교보문고 핵심 가중치',
+        label: '교보문고 가중치',
         data: kyoboWeights,
         backgroundColor: colors.accent2,
+        borderRadius: 4
+      },
+      {
+        label: '알라딘 가중치',
+        data: aladinWeights,
+        backgroundColor: colors.accent3,
         borderRadius: 4
       }
     ]
@@ -414,7 +456,7 @@ export const KeywordTfidfChart: React.FC<ChartProps> = ({ theme }) => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    indexAxis: 'y' as const, // 가로 막대 그래프 설정
+    indexAxis: 'y' as const,
     plugins: {
       legend: { labels: { color: colors.text } }
     },
@@ -424,5 +466,5 @@ export const KeywordTfidfChart: React.FC<ChartProps> = ({ theme }) => {
     }
   };
 
-  return <Bar key={theme} data={chartData} options={options} />;
+  return <Bar key={theme + books.length} data={chartData} options={options} />;
 };

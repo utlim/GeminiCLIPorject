@@ -110,10 +110,12 @@ def main() -> None:
     # 원본 파일 경로
     yes24_csv = "yes24/data/bestsellers.csv"
     kyobo_csv = "kyobobooks/data/bestsellers.csv"
+    aladin_csv = "aladin/data/bestsellers.csv"
     
     # 출력 파일 경로 (React assets 내로 수정)
     yes24_json = "dashboard/src/assets/data/yes24_bestsellers.json"
     kyobo_json = "dashboard/src/assets/data/kyobobooks_bestsellers.json"
+    aladin_json = "dashboard/src/assets/data/aladin_bestsellers.json"
     
     print("=" * 60)
     print("베스트셀러 데이터 변환 파이프라인 가동")
@@ -121,8 +123,10 @@ def main() -> None:
     
     convertCsvToJson(yes24_csv, yes24_json, "YES24")
     convertCsvToJson(kyobo_csv, kyobo_json, "교보문고")
+    convertCsvToJson(aladin_csv, aladin_json, "알라딘")
     
     print("\n데이터 변환 완료.")
 
 if __name__ == "__main__":
     main()
+

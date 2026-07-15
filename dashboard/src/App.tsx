@@ -14,6 +14,7 @@ import {
 // 데이터 직접 로드
 import yes24RawData from './assets/data/yes24_bestsellers.json';
 import kyoboRawData from './assets/data/kyobobooks_bestsellers.json';
+import aladinRawData from './assets/data/aladin_bestsellers.json';
 
 // 컴포넌트 임포트
 import { 
@@ -49,7 +50,7 @@ export default function App() {
 
   // 2. 통합 검색 및 필터 필드 상태
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedStore, setSelectedStore] = useState<'ALL' | 'YES24' | '교보문고'>('ALL');
+  const [selectedStore, setSelectedStore] = useState<'ALL' | 'YES24' | '교보문고' | '알라딘'>('ALL');
   const [sortBy, setSortBy] = useState<string>('rank');
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(60000);
@@ -58,7 +59,7 @@ export default function App() {
   
   // 3. 선택된 도서 상세 모달 상태
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
-  const [selectedBookStore, setSelectedBookStore] = useState<'YES24' | '교보문고'>('YES24');
+  const [selectedBookStore, setSelectedBookStore] = useState<'YES24' | '교보문고' | '알라딘'>('YES24');
 
   // 테마 바디 바인딩
   useEffect(() => {
@@ -75,11 +76,13 @@ export default function App() {
     const pubSet = new Set<string>();
     yes24RawData.forEach(b => pubSet.add(b.publisher));
     kyoboRawData.forEach(b => pubSet.add(b.publisher));
+    aladinRawData.forEach(b => pubSet.add(b.publisher));
     
     // 점유율이 높은 상위 12개 출판사만 필터 목록에 표시
     const pubCounts: { [key: string]: number } = {};
     yes24RawData.forEach(b => { pubCounts[b.publisher] = (pubCounts[b.publisher] || 0) + 1; });
     kyoboRawData.forEach(b => { pubCounts[b.publisher] = (pubCounts[b.publisher] || 0) + 1; });
+    aladinRawData.forEach(b => { pubCounts[b.publisher] = (pubCounts[b.publisher] || 0) + 1; });
     
     return Object.entries(pubCounts)
       .sort((a, b) => b[1] - a[1])
@@ -97,25 +100,44 @@ export default function App() {
   };
 
   // 다른 서점의 매칭 도서 찾기 보조 함수
-  const findMatchedBook = (book: Book, currentStore: 'YES24' | '교보문고'): Book | null => {
+  interface MatchedBookInfo {
+    store: 'YES24' | '교보문고' | '알라딘';
+    book: Book;
+  }
+
+  const findMatchedBook = (book: Book, currentStore: 'YES24' | '교보문고' | '알라딘'): MatchedBookInfo[] => {
     const normTarget = normalizeTitle(book.title);
-    const searchPool = currentStore === 'YES24' ? kyoboRawData : yes24RawData;
+    const results: MatchedBookInfo[] = [];
     
-    // 1차: 정규화 도서명 완벽 일치 매칭
-    const exactMatch = searchPool.find(b => normalizeTitle(b.title) === normTarget);
-    if (exactMatch) return exactMatch as Book;
+    const pools = [
+      { name: 'YES24' as const, data: yes24RawData },
+      { name: '교보문고' as const, data: kyoboRawData },
+      { name: '알라딘' as const, data: aladinRawData }
+    ].filter(p => p.name !== currentStore);
     
-    // 2차: 도서명 포함 관계 매칭 (Fuzzy Match 보강)
-    const fuzzyMatch = searchPool.find(b => {
-      const normB = normalizeTitle(b.title);
-      return normB.includes(normTarget) || normTarget.includes(normB);
+    pools.forEach(pool => {
+      // 1차: 정규화 도서명 완벽 일치 매칭
+      const exactMatch = pool.data.find(b => normalizeTitle(b.title) === normTarget);
+      if (exactMatch) {
+        results.push({ store: pool.name, book: exactMatch as Book });
+        return;
+      }
+      
+      // 2차: 도서명 포함 관계 매칭 (Fuzzy Match 보강)
+      const fuzzyMatch = pool.data.find(b => {
+        const normB = normalizeTitle(b.title);
+        return normB.includes(normTarget) || normTarget.includes(normB);
+      });
+      if (fuzzyMatch) {
+        results.push({ store: pool.name, book: fuzzyMatch as Book });
+      }
     });
-    return (fuzzyMatch as Book) || null;
+    return results;
   };
 
   // 6. 데이터 필터링 및 캐싱 연산
   const filteredBooks = useMemo(() => {
-    let list: { book: Book; store: 'YES24' | '교보문고' }[] = [];
+    let list: { book: Book; store: 'YES24' | '교보문고' | '알라딘' }[] = [];
 
     // 서점 데이터 결합
     if (selectedStore === 'ALL' || selectedStore === 'YES24') {
@@ -123,6 +145,9 @@ export default function App() {
     }
     if (selectedStore === 'ALL' || selectedStore === '교보문고') {
       kyoboRawData.forEach(b => list.push({ book: b as Book, store: '교보문고' }));
+    }
+    if (selectedStore === 'ALL' || selectedStore === '알라딘') {
+      aladinRawData.forEach(b => list.push({ book: b as Book, store: '알라딘' }));
     }
 
     // 조건 1. 검색어 필터 (도서명, 저자, 출판사)
@@ -325,7 +350,7 @@ export default function App() {
           <div>
             <label className="block text-xs opacity-75 mb-1.5 font-medium">서점 선택</label>
             <div className="flex bg-black/20 p-1 rounded-xl border border-[var(--border-color)]">
-              {(['ALL', 'YES24', '교보문고'] as const).map(store => (
+              {(['ALL', 'YES24', '교보문고', '알라딘'] as const).map(store => (
                 <button
                   key={store}
                   onClick={() => setSelectedStore(store)}
@@ -492,7 +517,7 @@ export default function App() {
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/25 font-bold text-[var(--text-body)]">
                     {item.store} {item.book.rank}위
                   </span>
-                  {findMatchedBook(item.book, item.store) && (
+                  {findMatchedBook(item.book, item.store).length > 0 && (
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" title="교차 서점 매칭 완료"></span>
                   )}
                 </div>
