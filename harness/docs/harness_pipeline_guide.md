@@ -110,3 +110,33 @@ $ git commit -m "feat: 새로운 대시보드 필터 상태 연동"
  2 files changed, 25 insertions(+)
 ```
 
+---
+
+## 6. 🛠️ 안정성 및 보안 보완 수칙 (Robustness & Security Best Practices)
+테스트 하네스의 신뢰성과 원격 자동 배포의 무결성을 기성급 수준으로 유지하기 위해 아래 **5가지 상세 보완 조치**를 실전 코딩 시 적용합니다.
+
+### ① 데이터 스키마 유효성 검증 (Data Schema Validation)
+* **문제점**: 수집 데이터의 컬럼 누락이나 타입 오매칭은 빌드 시점에 잡히지 않아 대시보드 런타임 크래시를 유발합니다.
+* **보완책**: 파이썬 `pydantic` 또는 `marshmallow` 스키마 벨리데이터를 활용해 데이터 로드 시 각 행의 규격(정가 ＞ 판매가 여부, 필수 문자열 검사 등)을 1차적으로 강제 통과시켜 검증을 고도화합니다.
+
+### ② 비밀 자격 증명 보안 강화 (Credential Security)
+* **문제점**: API 게이트웨이 호출 토큰이나 깃허브 개인 API 키가 마스터 브랜치에 그대로 커밋되어 외부에 노출될 위험이 존재합니다.
+* **보완책**:
+  - 비밀 정보는 프로젝트 루트의 `.env` 파일에 보관하고 `.gitignore`에 등록하여 로컬 디스크 상에만 격리합니다.
+  - GitHub Actions 구동 시에는 GitHub Repository Settings ➡️ Secrets에 토큰을 안전하게 등록하고, `deploy.yml` 본문에서 `${{ secrets.DEPLOY_TOKEN }}` 형태로만 주입받도록 구성합니다.
+
+### ③ 가상환경 의존성 자동 동기화 (Dependency Auto-Syncing)
+* **문제점**: 수집기나 분석기가 로컬에 없는 외부 라이브러리(예: `requests`, `playwright` 등)를 임포트할 때 로컬 오케스트레이터가 예외를 뿜고 뻗어 버립니다.
+* **보완책**: `orchestrator.py` 구동 도입부에 현재 사용 가상환경(`sys.executable`)에 락된 패키지 리스트를 검사하고, 미설치 라이브러리 검출 시 `uv pip install -r requirements.txt` 를 자동으로 Subprocess로 트리거하여 실행 동기화(Syncing)를 보장합니다.
+
+### ④ Playwright 요소 기반 대기 전략 (DOM Wait Strategy)
+* **문제점**: 페이지 로딩이 네트워크 지연으로 느려질 경우 단순 시간 지연(`time.sleep`)이나 `networkidle`은 30초 한계 타임아웃 오류를 야기합니다.
+* **보완책**: 중요 컨테이너 요소가 마운트될 때까지 대기하는 `page.wait_for_selector(".dashboard-ready-class", timeout=10000)` 등 요소 기반 반응형 대기(DOM-based Wait) 코드를 수집 및 캡처 스크립트에 반드시 구성합니다.
+
+### ⑤ 대시보드 런타임 Error Boundary 및 롤백 정책
+* **문제점**: 예기치 못한 브라우저 런타임 오류 시, 대시보드 페이지 전체가 하얗게 크래시되는 현상이 생기며, 깃허브 배포 오작동 시 이전 버전으로 수동 복구해야 합니다.
+* **보완책**:
+  - React 대시보드 내 최상단에 `ErrorBoundary` 컴포넌트를 설계하여 크래시 시 사용자에게 친절한 "에러 복구 중" 컴포넌트를 띄우고 차트 붕괴를 고립시킵니다.
+  - 배포 실패나 비정상 렌더링 검출 시, 깃 명령 `git push origin +<commit-hash>:gh-pages`를 강제로 실행해 즉각 이전 무오류 배포본으로의 즉시 롤백(Rollback Roll) 정책을 수립해 운용합니다.
+
+
