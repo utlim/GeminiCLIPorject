@@ -80,4 +80,65 @@ flowchart TD
     class Analyzer,Dashboard agent;
     class LintCheck,TscCheck validate;
     class Commit,Actions,BuildStep deploy;
+
+---
+
+## 🔄 파이프라인 시퀀스 다이어그램 (Sequence Diagram)
+
+본 시퀀스 다이어그램은 수집-분석-커밋-빌드-배포 전 과정에 참여하는 로컬 구성원들과 원격 깃허브 파이프라인 간의 **시간 순서 흐름과 역할 인계 상호작용**을 구체적으로 도식화한 것입니다.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as 개발자 / 에이전트
+    participant Orc as 오케스트레이터<br>(orchestrator.py)
+    participant Hook as Git pre-commit Hook<br>(pre-commit-hook.sh)
+    participant Git as 로컬 Git 저장소
+    participant Hub as GitHub 원격 저장소
+    participant Act as GitHub Actions<br>(deploy.yml)
+    participant Pages as GitHub Pages CDN
+
+    %% 1. 로컬 파이프라인 가동
+    Note over Dev, Orc: 1단계: 로컬 파이프라인 일괄 실행 (수집 및 변환)
+    Dev->>Orc: 파이프라인 가동 명령 (args: scraper, analyzer, converter)
+    activate Orc
+    Orc->>Orc: 1. 수집기 (scraper.py) 구동 ➡️ CSV 데이터 적재
+    Orc->>Orc: 2. 분석기 (eda.py) 구동 ➡️ 차트 이미지 & EDA 리포트 생성
+    Orc->>Orc: 3. 변환기 (convert_data.py) 구동 ➡️ 정형 JSON 에셋 추출
+    Orc-->>Dev: 전처리 완료 및 에셋 대시보드 이식 완료 보고
+    deactivate Orc
+
+    %% 2. Git Commit 검증 단계
+    Note over Dev, Git: 2단계: 로컬 커밋 및 Hook 무결성 검증 (Gate)
+    Dev->>Git: git commit 실행 요청
+    activate Hook
+    Git->>Hook: 커밋 전 Hook 가로채기 트리거
+    Hook->>Hook: 1. oxlint Linter 검증
+    Hook->>Hook: 2. npm run build (tsc 타입 체크 및 빌드 이상 유무 검사)
+    alt 타입 검증 에러 발생 (TypeScript 에러 등)
+        Hook-->>Git: 에러 검출 (Exit Code: 1)
+        Git-->>Dev: 커밋 거절 및 중단 (Commit Blocked)
+    else 타입 검증 무오류 패스 (Exit Code: 0)
+        Hook-->>Git: 통과 (Exit Code: 0)
+        deactivate Hook
+        Git->>Git: 로컬 커밋 생성 완료
+        Git-->>Dev: 커밋 성공 보고
+    end
+
+    %% 3. 원격 푸시 및 자동 배포 단계
+    Note over Dev, Pages: 3단계: 원격 동기화 및 깃허브 페이지 자동 서빙 (CI/CD)
+    Dev->>Hub: git push origin master 실행
+    activate Hub
+    Hub->>Act: master 브랜치 푸시 감지 ➡️ deploy.yml 워크플로우 트리거
+    deactivate Hub
+    activate Act
+    Act->>Act: 1. Node.js 20 캐싱 및 환경 셋업
+    Act->>Act: 2. tsc 컴파일 & Vite 빌드 (dist/ 에셋 생성)
+    Act->>Hub: 3. dist/ 내부 산출물만 gh-pages 브랜치에 강제 덮어쓰기 push
+    deactivate Act
+    activate Pages
+    Pages->>Pages: CDN 캐시 갱신 및 상대경로 ('./') 호스팅 배포 개시
+    Pages-->>Dev: 실시간 공개 URL 접속 지원 (utlim.github.io/GeminiCLIPorject/)
+    deactivate Pages
 ```
+
