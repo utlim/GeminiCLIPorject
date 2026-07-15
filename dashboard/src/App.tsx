@@ -396,7 +396,7 @@ export default function App() {
             <Layers className="w-4 h-4 text-sky-400" /> 두 서점 도서 가격대별 점유 비교 (%)
           </h3>
           <div className="flex-1 min-h-0">
-            <PriceDistributionChart theme={theme} yes24Data={yes24RawData} kyoboData={kyoboRawData} />
+            <PriceDistributionChart theme={theme} books={filteredBooks} />
           </div>
         </div>
 
@@ -406,7 +406,7 @@ export default function App() {
             <TrendingUp className="w-4 h-4 text-purple-400" /> 주요 출판사별 베스트셀러 점유 비교
           </h3>
           <div className="flex-1 min-h-0">
-            <PublisherShareChart theme={theme} yes24Data={yes24RawData} kyoboData={kyoboRawData} />
+            <PublisherShareChart theme={theme} books={filteredBooks} />
           </div>
         </div>
 
@@ -416,7 +416,7 @@ export default function App() {
             <HelpCircle className="w-4 h-4 text-pink-400" /> YES24 베스트셀러 만족도(평점) 분포
           </h3>
           <div className="flex-1 min-h-0 flex items-center justify-center">
-            <RatingDistributionChart theme={theme} yes24Data={yes24RawData} kyoboData={kyoboRawData} />
+            <RatingDistributionChart theme={theme} books={filteredBooks} />
           </div>
         </div>
 
@@ -426,7 +426,7 @@ export default function App() {
             <Layers className="w-4 h-4 text-emerald-400" /> 순위대별 독자 리뷰 활성 비교 (평균)
           </h3>
           <div className="flex-1 min-h-0">
-            <RankVsPerformanceChart theme={theme} yes24Data={yes24RawData} kyoboData={kyoboRawData} />
+            <RankVsPerformanceChart theme={theme} books={filteredBooks} />
           </div>
         </div>
 
@@ -436,7 +436,7 @@ export default function App() {
             <SearchCode className="w-4 h-4 text-orange-400" /> 도서명 빈출 키워드 가중치 비교 (TF-IDF)
           </h3>
           <div className="flex-1 min-h-0">
-            <KeywordTfidfChart theme={theme} yes24Data={yes24RawData} kyoboData={kyoboRawData} />
+            <KeywordTfidfChart theme={theme} books={filteredBooks} />
           </div>
         </div>
       </section>

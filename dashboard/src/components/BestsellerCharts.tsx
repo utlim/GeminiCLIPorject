@@ -34,10 +34,31 @@ ChartJS.register(
   Filler
 );
 
+interface Book {
+  goods_no: string;
+  rank: number;
+  title: string;
+  subtitle: string;
+  author: string;
+  publisher: string;
+  publish_date: string;
+  discount_rate: string;
+  sale_price: number;
+  original_price: number;
+  point: string;
+  sale_index: number;
+  review_count: number;
+  rating: number;
+}
+
+interface FilteredItem {
+  book: Book;
+  store: 'YES24' | '교보문고';
+}
+
 interface ChartProps {
   theme: string;
-  yes24Data: any[];
-  kyoboData: any[];
+  books: FilteredItem[];
 }
 
 // 테마에 따른 차트 공통 폰트 및 그리드 색상 매핑 함수
@@ -83,8 +104,11 @@ const getThemeColors = (theme: string) => {
 // -------------------------------------------------------------------------
 // 1. 가격대 분포 비교 차트
 // -------------------------------------------------------------------------
-export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, yes24Data, kyoboData }) => {
+export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
+  
+  const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
+  const kyoboData = books.filter(item => item.store === '교보문고').map(item => item.book);
   
   const getPriceRangeCounts = (data: any[]) => {
     const counts = [0, 0, 0, 0, 0]; // 1만원 이하, 1-2만원, 2-3만원, 3-4만원, 4만원 초과
@@ -103,8 +127,8 @@ export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, yes24Data,
   const kyoboCounts = getPriceRangeCounts(kyoboData);
 
   // 교보문고는 100개이므로 비율(%)로 비교 가능하도록 정규화
-  const yes24Percent = yes24Counts.map(count => (count / yes24Data.length * 100).toFixed(1));
-  const kyoboPercent = kyoboCounts.map(count => (count / kyoboData.length * 100).toFixed(1));
+  const yes24Percent = yes24Counts.map(count => (yes24Data.length > 0 ? (count / yes24Data.length * 100).toFixed(1) : "0"));
+  const kyoboPercent = kyoboCounts.map(count => (kyoboData.length > 0 ? (count / kyoboData.length * 100).toFixed(1) : "0"));
 
   const chartData = {
     labels: ['1만원 이하', '1만원-2만원', '2만원-3만원', '3만원-4만원', '4만원 초과'],
@@ -153,8 +177,11 @@ export const PriceDistributionChart: React.FC<ChartProps> = ({ theme, yes24Data,
 // -------------------------------------------------------------------------
 // 2. 주요 출판사별 베스트셀러 점유율 비교 차트
 // -------------------------------------------------------------------------
-export const PublisherShareChart: React.FC<ChartProps> = ({ theme, yes24Data, kyoboData }) => {
+export const PublisherShareChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
+
+  const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
+  const kyoboData = books.filter(item => item.store === '교보문고').map(item => item.book);
 
   // 상위 출판사 추출 (두 서점 합산 상위 6개 도출)
   const allPubs: { [key: string]: number } = {};
@@ -169,7 +196,7 @@ export const PublisherShareChart: React.FC<ChartProps> = ({ theme, yes24Data, ky
   const getPubCounts = (data: any[]) => {
     return topPubs.map(pub => {
       const count = data.filter(b => b.publisher === pub).length;
-      return (count / data.length * 100).toFixed(1);
+      return data.length > 0 ? (count / data.length * 100).toFixed(1) : "0";
     });
   };
 
@@ -220,8 +247,10 @@ export const PublisherShareChart: React.FC<ChartProps> = ({ theme, yes24Data, ky
 // -------------------------------------------------------------------------
 // 3. 서점별 평점(Rating)대 분포 비교 차트
 // -------------------------------------------------------------------------
-export const RatingDistributionChart: React.FC<ChartProps> = ({ theme, yes24Data }) => {
+export const RatingDistributionChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
+
+  const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
 
   const getRatingStats = (data: any[]) => {
     let perfect = 0;   // 10점 만점
@@ -281,8 +310,11 @@ export const RatingDistributionChart: React.FC<ChartProps> = ({ theme, yes24Data
 // -------------------------------------------------------------------------
 // 4. 순위 구간별 리뷰 수 및 성과 차트 (Combo 차트)
 // -------------------------------------------------------------------------
-export const RankVsPerformanceChart: React.FC<ChartProps> = ({ theme, yes24Data, kyoboData }) => {
+export const RankVsPerformanceChart: React.FC<ChartProps> = ({ theme, books }) => {
   const colors = getThemeColors(theme);
+
+  const yes24Data = books.filter(item => item.store === 'YES24').map(item => item.book);
+  const kyoboData = books.filter(item => item.store === '교보문고').map(item => item.book);
 
   const getRankGroupStats = (data: any[]) => {
     const avgReviews = [0, 0, 0, 0, 0];
