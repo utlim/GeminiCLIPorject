@@ -80,6 +80,7 @@ flowchart TD
     class Analyzer,Dashboard agent;
     class LintCheck,TscCheck validate;
     class Commit,Actions,BuildStep deploy;
+```
 
 ---
 
