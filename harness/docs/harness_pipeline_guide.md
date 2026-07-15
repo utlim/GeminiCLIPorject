@@ -55,3 +55,58 @@ chmod +x .git/hooks/pre-commit
   * 깃허브 Actions 가상 가동 환경에서 Node.js 캐시 패키지를 복구 및 의존성을 정합합니다.
   * `npm run build`를 통해 생성된 순수 프로덕션 빌드 에셋(`dashboard/dist/` 폴더 내부의 5개 파일)만 분리 추출합니다.
   * 깃허브가 제공하는 환경 토큰을 활용해 원격 **`gh-pages`** 브랜치로 무결점 클린 덮어쓰기 배포를 안전하게 수행하여 호스팅을 자동 갱신합니다.
+
+---
+
+## 4. 🤖 자율 협업 에이전트 팀 가동 & 프롬프트 예시 (Subagent Prompt Blueprints)
+신규 사이트의 분석 프로젝트 실행 시, `/teamwork-preview` 커맨드로 소환된 3대 전문 자율 에이전트에 지시할 때 사용하는 구체적인 **역할별 지시 프롬프트 예시**입니다.
+
+### A. 수집 전담 에이전트 (Scraper Agent) 호출 예시
+> **[지시 프롬프트]**
+> "너는 수집 전담 에이전트(Scraper Agent)다. `.agents/rules/universal-scraping-rules.md`를 필독하고 다음 작업을 수행하라:
+> 1. 타겟 도메인 `https://example.com/trends`를 정찰하여 SSR/SPA 여부 및 데이터 수신 API endpoint를 식별하라.
+> 2. `requests` 패키지 또는 Playwright 스니핑 기술을 사용해 데이터를 가로채는 `scraper.py` 코드를 작성하라.
+> 3. 수집 속도에 최소 1.5초 지연(sleep)을 섞어 우회하고 결과를 `data/trends.csv` 정규 데이터셋으로 정합해라."
+
+### B. 분석 전담 에이전트 (Analyzer Agent) 호출 예시
+> **[지시 프롬프트]**
+> "너는 분석 전담 에이전트(Analyzer Agent)다. `.agents/rules/universal-analysis-rules.md`를 준수하여 다음 작업을 수행하라:
+> 1. `data/trends.csv` 데이터를 로드해 pandas 기술 통계량을 도출하라.
+> 2. matplotlib를 가동해 시각화 차트 3종을 생성하라. (단, seaborn의 테마 설정은 금지하며, `import koreanize_matplotlib`을 필수 호출해 한글 깨짐을 예방하라.)
+> 3. 분석 보고서인 `reports/EDA_Report.md`와 발표용 `reports/EDA_Report_Slides.md`(Marp 마크다운 형식)를 자동 작성하라."
+
+### C. 대시보드 및 배포 에이전트 (Dashboard Agent) 호출 예시
+> **[지시 프롬프트]**
+> "너는 대시보드 개발 에이전트(Dashboard Agent)다. `.agents/rules/universal-dashboard-rules.md`를 엄격히 준수하라:
+> 1. `reports/EDA_Report.md` 분석 결과를 바탕으로, 데이터를 프론트엔드가 즉시 임포트할 수 있도록 JSON 에셋으로 변환 전처리하라.
+> 2. React + TS 기반의 Bento Grid 테마 반응형 웹 대시보드 UI를 작성하라.
+> 3. Chart.js 시각화 마운트 시 리렌더링 오류를 차단하기 위해 고유 `key={theme + data.length}`를 연동하고, `LineController`와 `BarController` 모듈을 명시적 레지스터에 등록하라."
+
+---
+
+## 5. ⚓ 로컬 pre-commit 훅 동작 로그 예시 (Git Hook Output Example)
+로컬에서 개발자가 커밋을 수행할 때, 터미널 상에서 `pre-commit-hook.sh`가 무결성을 검증하고 내뱉는 정상 패스 로그 시뮬레이션입니다.
+
+```text
+$ git commit -m "feat: 새로운 대시보드 필터 상태 연동"
+
+=============================================
+ 🛡️ Git pre-commit Hook: 코드 무결성 검사 중...
+=============================================
+
+🔎 [1단계] oxlint Linter 구동...
+  - dashboard/src/App.tsx 검사 중...
+  - dashboard/src/components/BestsellerCharts.tsx 검사 중...
+ ✅ Linter 검증 통과!
+
+🔎 [2단계] TypeScript 컴파일 및 타입 검증 (tsc)...
+  - tsc -b 빌드 구동...
+  - vite build 번들 최적화...
+ ✅ TypeScript 타입 체크 & 빌드 무결성 검증 통과!
+
+🎉 [검증 성공] 모든 무결성 테스트를 통과했습니다. 커밋을 진행합니다.
+
+[master 8c0d9fa] feat: 새로운 대시보드 필터 상태 연동
+ 2 files changed, 25 insertions(+)
+```
+
