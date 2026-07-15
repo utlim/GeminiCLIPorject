@@ -1,6 +1,6 @@
-# 📚 YES24 vs 교보문고 컴퓨터/IT 베스트셀러 데이터 분석 & BI 대시보드
+# 📚 국내 3대 서점 (YES24 vs 교보 vs 알라딘) 컴퓨터/IT 베스트셀러 데이터 분석 & BI 대시보드
 
-본 프로젝트는 국내 양대 서점인 **YES24(1,000위)**와 **교보문고(100위)**의 컴퓨터/IT 분야 베스트셀러 도서 데이터를 크로스 플랫폼 관점에서 심층적으로 비교 분석하고, 이를 시각적으로 탐색할 수 있는 **반응형 웹 대시보드(BI Dashboard)** 구축 프로젝트입니다.
+본 프로젝트는 국내 3대 서점인 **YES24(1,000위)**, **교보문고(100위)**, **알라딘(100위)**의 컴퓨터/IT 분야 베스트셀러 도서 데이터를 크로스 플랫폼 관점에서 심층적으로 비교 분석하고, 이를 시각적으로 탐색할 수 있는 **반응형 웹 대시보드(BI Dashboard)** 구축 프로젝트입니다.
 
 ---
 
@@ -9,31 +9,36 @@
 
 > ### 🌐 [실시간 대시보드 서비스 접속 (GitHub Pages)](https://utlim.github.io/GeminiCLIPorject/)
 > * **호스팅 브랜치**: `gh-pages`
-> * **최신 업데이트**: 3대 전역 테마(Dark Bento, Glass Light, Neon Cyber), 1:1 도서 매칭 비교, Chart.js 5종 시각화 콤보 반영 완료
+> * **최신 업데이트**: 3대 전역 테마(Dark Bento, Glass Light, Neon Cyber), 3대 서점 교차 비교 모달, Chart.js 3사 통합 시각화 반영 완료
 
 ---
 
 ## 🛠️ 프로젝트 디렉터리 구조
-본 저장소는 크게 데이터 수집(Scraping), 탐색적 데이터 분석(EDA), 그리고 대시보드 프론트엔드로 삼원화되어 구성되어 있습니다.
+본 저장소는 데이터 수집(Scraping), 탐색적 데이터 분석(EDA), 대시보드 프론트엔드, 그리고 검증용 테스트 하네스(Harness)로 구성되어 있습니다.
 
 ```text
 GeminiCLIPorject/
-├── yes24/                 # YES24 데이터 수집 및 분석 프로젝트
-│   ├── data/              # 1,000위 베스트셀러 CSV 데이터
+├── yes24/                 # YES24 데이터 수집 및 분석 프로젝트 (1,000위)
+│   ├── data/              # 베스트셀러 CSV 데이터
+│   └── src/               # requests 기반 수집기 및 시각화 코드
+│
+├── kyobobooks/            # 교보문고 데이터 수집 및 분석 프로젝트 (100위)
+│   ├── data/              # 베스트셀러 CSV 데이터
+│   └── src/               # Playwright 실시간 API 스니핑 수집기
+│
+├── aladin/                # 알라딘 데이터 수집 및 분석 프로젝트 (100위)
+│   ├── data/              # 베스트셀러 CSV 데이터
 │   ├── reports/           # EDA 상세 분석 마크다운 보고서
 │   └── src/               # requests 기반 수집기 및 시각화 코드
 │
-├── kyobobooks/            # 교보문고 데이터 수집 및 분석 프로젝트
-│   ├── data/              # 100위 베스트셀러 CSV 데이터
-│   ├── docs/              # 수집/대시보드 설계서 및 구현 계획서
-│   ├── reports/           # 7,000자 분량의 초정밀 EDA 마크다운 보고서
-│   └── src/               # Playwright 실시간 API 스니핑 수집기
+├── harness/               # 테스트 하네스 및 배포 자동화 파이프라인
+│   ├── src/orchestrator.py# 파이프라인 일괄 검증 제어 CLI 툴
+│   └── src/pre-commit-hook# Git pre-commit 무결성 검증 훅
 │
-├── dashboard/             # React 기반 통합 BI 대시보드 웹앱
+├── dashboard/             # React 기반 3사 통합 BI 대시보드 웹앱
 │   ├── src/assets/data/   # 전처리 파이프라인을 거친 JSON 데이터셋
-│   ├── src/components/    # Chart.js 시각화 및 비교 모달 컴포넌트
-│   ├── src/App.tsx        # 검색/정렬/필터/1:1 매칭 제어 로직
-│   └── src/index.css      # 3대 디자인 테마 전역 CSS 변수 바인딩
+│   ├── src/components/    # Chart.js 시각화 및 3사 비교 모달 컴포넌트
+│   └── src/App.tsx        # 검색/정렬/필터/3사 교차 매칭 제어 로직
 └── README.md              # 프로젝트 종합 안내서 (본 파일)
 ```
 
