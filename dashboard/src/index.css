@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* Google Fonts - Inter & Outfit 도입 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* -------------------------------------------------------------------------
+   3대 테마별 CSS 변수 바인딩
+   ------------------------------------------------------------------------- */
+
+/* 1. Sleek Dark Bento Theme (다크 벤토 테마) */
+.theme-dark-bento {
+  --bg-primary: #090d16;
+  --bg-secondary: #131b2e;
+  --bg-card: #1e293b;
+  --border-color: #334155;
+  --text-title: #f8fafc;
+  --text-body: #94a3b8;
+  --color-accent: #38bdf8;
+  --color-accent-glow: rgba(56, 189, 248, 0.15);
+  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --glass-blur: none;
+  --glass-bg: none;
+}
+
+/* 2. Glassmorphism Theme (글래스모피즘 테마) */
+.theme-glass-light {
+  --bg-primary: #e0e7ff;
+  --bg-secondary: rgba(255, 255, 255, 0.25);
+  --bg-card: rgba(255, 255, 255, 0.35);
+  --border-color: rgba(255, 255, 255, 0.5);
+  --text-title: #1e1b4b;
+  --text-body: #4338ca;
+  --color-accent: #6366f1;
+  --color-accent-glow: rgba(99, 102, 241, 0.2);
+  --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  --glass-blur: blur(12px);
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+}
+
+/* 3. Neon Cyberpunk Theme (네온 사이버 테마) */
+.theme-neon-cyber {
+  --bg-primary: #030305;
+  --bg-secondary: #0a0a12;
+  --bg-card: #0e0e1a;
+  --border-color: #ff007f;
+  --text-title: #00ffff;
+  --text-body: #ff007f;
+  --color-accent: #00ffff;
+  --color-accent-glow: rgba(0, 255, 255, 0.25);
+  --card-shadow: 0 0 15px rgba(255, 0, 127, 0.25);
+  --glass-blur: none;
+  --glass-bg: none;
+}
+
+/* 테마 기반 변수 전역 적용 */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-body);
+}
+
+/* 글래스모피즘 전용 백그라운드 효과 */
+.bg-gradient-glass {
+  background-image: radial-gradient(circle at 10% 20%, rgb(184, 185, 252) 0%, rgb(240, 222, 250) 90%);
+}
+
+/* 스크롤바 디자인 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
